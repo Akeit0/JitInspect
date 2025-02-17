@@ -75,9 +75,15 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
     /// <param name="method">The method to disassemble.</param>
     public void Disassemble(IBufferWriter<char> writer, MethodBase method)
     {
-        if (method.IsGenericMethodDefinition)
+        if (method.IsGenericMethodDefinition )
         {
-            WriteIgnoredOpenGeneric(writer, method);
+            WriteSignatureFromReflection(writer, method);
+            writer.WriteLine("    ; Open generics cannot be JIT-compiled.");
+        }
+        else if (method.IsAbstract)
+        {
+            WriteSignatureFromReflection(writer, method);
+            writer.WriteLine("    ; Abstract method cannot be JIT-compiled.");
         }
         else
         {
