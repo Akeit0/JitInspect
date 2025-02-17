@@ -14,6 +14,7 @@ namespace JitInspect;
 /// </summary>
 public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
 {
+    static readonly DisassembleOptions defaultOptions= new DisassembleOptions();
     internal ConcurrentBag<IDisposable> Disposables { get; } = new ConcurrentBag<IDisposable>();
 
     public static JitDisassembler Create()
@@ -53,10 +54,11 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
     /// Disassembles the given method.
     /// </summary>
     /// <param name="method">The method to disassemble.</param>
-    public string Disassemble(MethodBase method)
+    /// <param name="options">options</param>
+    public string Disassemble(MethodBase method,DisassembleOptions? options=null)
     {
         using var writer = new ArrayPoolBufferWriter<char>();
-        Disassemble(writer, method);
+        Disassemble(writer, method,options);
         return writer.AsSpan().ToString();
     }
 
@@ -64,9 +66,10 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
     /// Disassembles the given method of delegate.
     /// </summary>
     /// <param name="delegate">The delegate to disassemble.</param>
-    public string Disassemble(Delegate @delegate)
+    /// <param name="options">options</param>
+    public string Disassemble(Delegate @delegate,DisassembleOptions? options=null)
     {
-        return Disassemble(@delegate.Method);
+        return Disassemble(@delegate.Method,options);
     }
 
     /// <summary>
@@ -74,51 +77,57 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
     /// </summary>
     /// <param name="writer">The writer to write the disassembled method to.</param>
     /// <param name="method">The method to disassemble.</param>
-    public void Disassemble(IBufferWriter<char> writer, MethodBase method)
+    /// <param name="options">options</param>
+    public void Disassemble(IBufferWriter<char> writer, MethodBase method,DisassembleOptions? options=null)
     {
-        WriteSignatureFromReflection(writer, method);
+        options ??= defaultOptions;
+        if (options.ShowMethodSignature)
+        {
+             WriteSignatureFromReflection(writer, method);
+        }
+        var indentSpan =(stackalloc char[Math.Clamp(options.Indentation,0,128)]);
+        indentSpan.Fill(' ');
         if (method.IsGenericMethodDefinition)
         {
-            writer.WriteLine("    ; Open generics cannot be JIT-compiled.");
+            writer.Write(indentSpan);
+            writer.WriteLine("; Open generics cannot be JIT-compiled.");
         }
         else if (method.IsAbstract)
         {
-            writer.WriteLine("    ; Abstract method cannot be JIT-compiled.");
+            writer.Write(indentSpan);
+            writer.WriteLine("; Abstract method cannot be JIT-compiled.");
         }
         else
         {
-            DisassembleConstructedMethod(writer, method);
+            DisassembleConstructedMethod(writer, method, indentSpan);
         }
     }
 
-    void DisassembleConstructedMethod(IBufferWriter<char> writer, MethodBase method)
+    void DisassembleConstructedMethod(IBufferWriter<char> writer, MethodBase method, ReadOnlySpan<char> indentSpan)
     {
         RuntimeMethodHandle handle = method.MethodHandle;
         handle.GetFunctionPointer();
         RuntimeHelpers.PrepareMethod(handle);
-        ClrMethodData? clrMethodData;
+        ClrMethod? clrMethod;
         lock (runtime)
             runtime.FlushCachedData();
         if (method.IsVirtual && !method.DeclaringType!.IsClass)
         {
-            var cl = runtime.GetMethodByInstructionPointer((ulong)FunctionPointerHelper.GetMethodPointer((MethodInfo)method));
-
-            clrMethodData = cl != null ? new ClrMethodData(cl.NativeCode, cl.HotColdInfo.HotSize) : null;
+            clrMethod = runtime.GetMethodByInstructionPointer((ulong)FunctionPointerHelper.GetMethodPointer((MethodInfo)method));
         }
         else
         {
-            clrMethodData = FindJitCompiledMethod(handle);
+            clrMethod = FindJitCompiledMethod(handle);
         }
 
-        if (clrMethodData == null)
+        if (clrMethod == null)
         {
             writer.WriteLine("    ; Failed to find JIT output.");
             return;
         }
 
-        var methodAddress = clrMethodData.Value.MethodAddress;
-        var methodLength = clrMethodData.Value.MethodSize;
-
+        var methodAddress = clrMethod.NativeCode;
+        var methodLength = clrMethod.HotColdInfo.HotSize;
 
         var reader = new MemoryCodeReader(new IntPtr(unchecked((long)methodAddress)), methodLength);
         var decoder = Decoder.Create(GetBitness(runtime.DataTarget.DataReader.Architecture), reader);
@@ -132,9 +141,11 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
         var resolver = new AsmSymbolResolver(runtime, methodAddress, methodLength);
         var formatter = new IntelFormatter(formatterOptions, resolver);
         var output = new DirectFormatterOutput(writer);
+        
         foreach (ref var instruction in instructions)
         {
-            writer.Write("    L");
+            writer.Write(indentSpan);
+            writer.Write("L");
             writer.Write((instruction.IP - methodAddress).ToString("x4"));
             writer.Write(": ");
             formatter.Format(instruction, output);
@@ -142,7 +153,7 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
         }
     }
 
-    ClrMethodData? FindJitCompiledMethod(RuntimeMethodHandle handle)
+    ClrMethod? FindJitCompiledMethod(RuntimeMethodHandle handle)
     {
         var methodDescAddress = unchecked((ulong)handle.Value.ToInt64());
         if (runtime.GetMethodByHandle(methodDescAddress) is not { } method)
@@ -155,10 +166,7 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
             return null;
         }
 
-        return new(
-            method.NativeCode,
-            method.HotColdInfo.HotSize
-        );
+        return method;
     }
 
     int GetBitness(Architecture architecture) => architecture switch
@@ -182,7 +190,6 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
 
     void WriteSignatureFromReflection(IBufferWriter<char> writer, MethodBase method)
     {
-        writer.WriteLine();
         if (method.DeclaringType is { } declaringType)
         {
             writer.Write(declaringType.FullName);
