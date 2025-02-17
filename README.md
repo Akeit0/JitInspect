@@ -3,6 +3,14 @@
 
 JitInspect disassembles JIT compiled managed methods to a x86/x64 ASM.
 Inspired by [JitBuddy](https://github.com/xoofx/JitBuddy)
+
+## NuGet
+https://www.nuget.org/packages/JitInspect
+```
+dotnet add package JitInspect
+```
+
+## Usage
 ```C#
 using JitInspect;
 
@@ -15,16 +23,14 @@ static void TestMethod(int a, int b)
     Console.WriteLine(a + b);
 }
 ```
-
+Output:
 ```asm
 Program.<<Main>$>g__TestMethod|0_0(System.Int32, System.Int32)
-    L0000: nop [rax+rax]
-    L0005: add ecx, edx
-    L0007: mov rax, 0x7fff2d3109f0
-    L0011: jmp rax
-
+    L0000: add ecx, edx
+    L0002: jmp 0x00007fff1d149690
 ```
+
+
 
 # LICENSE
 MIT
-```
