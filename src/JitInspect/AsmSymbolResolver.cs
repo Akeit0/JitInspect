@@ -11,6 +11,12 @@ internal class AsmSymbolResolver(
 {
     public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol)
     {
+        if (instruction.MemoryBase != Register.None)
+        {
+            symbol = default;
+            return false;
+        }
+
         if (address >= currentMethodAddress && address < currentMethodAddress + currentMethodLength)
         {
             // relative offset reference
@@ -19,7 +25,7 @@ internal class AsmSymbolResolver(
         }
 
         ClrMethod? clrMethod = null;
-        if (address is > 1024 and < 0xFFFFFFFFFFFFFFFF)
+        if (address is > 0x4000 and < 0xFFFFFFFFFFFFFFFF)
         {
             clrMethod = runtime.GetMethodByInstructionPointer(address);
         }
