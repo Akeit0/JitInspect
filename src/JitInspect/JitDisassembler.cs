@@ -192,7 +192,32 @@ public sealed class JitDisassembler(ClrRuntime runtime) : IDisposable
     {
         if (method.DeclaringType is { } declaringType)
         {
-            writer.Write(declaringType.FullName);
+            if(declaringType.IsGenericType)
+            {
+                writer.Write(declaringType.GetGenericTypeDefinition().FullName);
+                writer.Write("[");
+                var first = true;
+                foreach (var type in declaringType.GetGenericArguments())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        writer.Write(", ");
+                    }
+
+                    WriteTypeName(writer, type);
+                }
+
+                writer.Write("]");
+            }
+            else
+            {
+                writer.Write(declaringType.FullName);
+            }
+            
             writer.Write(".");
         }
 
