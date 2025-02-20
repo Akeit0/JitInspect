@@ -26,9 +26,10 @@ static void TestMethod(int a, int b)
 ```
 Output:
 ```asm
-Program.<<Main>$>g__TestMethod|0_0(System.Int32, System.Int32)
-    L0000: add ecx, edx
-    L0002: jmp 0x00007fff1d149690
+; Program.<<Main>$>g__TestMethod|0_0(Int32, Int32)
+L0000: add ecx, edx
+L0002: jmp qword ptr [0x7ffeffe84e88]; System.Console.WriteLine(Int32)
+
 ```
 # Credits
 - [JitBuddy](https://github.com/xoofx/JitBuddy)

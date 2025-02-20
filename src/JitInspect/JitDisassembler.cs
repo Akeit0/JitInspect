@@ -139,8 +139,6 @@ public abstract class JitDisassembler : IDisposable
         while (state.Todo.TryDequeue(out var next))
         {
             if (next.Depth > options.MaxRecursiveDepth) continue;
-            // lock (runtime)
-            //     runtime.FlushCachedData();
             if (!isFirst)
             {
                 writer.WriteLine();
