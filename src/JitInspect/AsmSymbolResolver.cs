@@ -1,22 +1,14 @@
 ﻿using Iced.Intel;
-using Microsoft.Diagnostics.Runtime;
 
 namespace JitInspect;
 
 internal class AsmSymbolResolver(
-    ClrRuntime runtime,
     ulong currentMethodAddress,
     uint currentMethodLength)
     : ISymbolResolver
 {
     public bool TryGetSymbol(in Instruction instruction, int operand, int instructionOperand, ulong address, int addressSize, out SymbolResult symbol)
     {
-        if (instruction.MemoryBase != Register.None)
-        {
-            symbol = default;
-            return false;
-        }
-
         if (address >= currentMethodAddress && address < currentMethodAddress + currentMethodLength)
         {
             // relative offset reference
@@ -24,19 +16,7 @@ internal class AsmSymbolResolver(
             return true;
         }
 
-        ClrMethod? clrMethod = null;
-        if (address is > 0x4000 and < 0xFFFFFFFFFFFFFFFF)
-        {
-            clrMethod = runtime.GetMethodByInstructionPointer(address);
-        }
-
-        if (clrMethod is null)
-        {
-            symbol = default;
-            return false;
-        }
-
-        symbol = new SymbolResult(address, $"0x{address:x} : {clrMethod.Signature}");
-        return true;
+        symbol = default;
+        return false;
     }
 }

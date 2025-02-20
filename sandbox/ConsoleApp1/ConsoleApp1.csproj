@@ -2,20 +2,14 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <LangVersion>13</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <TieredCompilation>false</TieredCompilation>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\JitInspect\JitInspect.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="JitBuddy" Version="0.5.0" />
-    </ItemGroup>
-
 </Project>

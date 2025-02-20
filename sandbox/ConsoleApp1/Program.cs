@@ -1,28 +1,61 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using JitInspect;
 
-var action = TestMethod;
-Console.WriteLine(action.Method.Disassemble());
-
-
-static void TestMethod(int a, int b)
+var opt = new DisassembleOptions
 {
-    Console.WriteLine(a + b);
-}
+    WriteMethodSignature = true,
+    WriteILToNativeMap = true,
+    MaxRecursiveDepth = 1,
+};
 
+using var stream = File.Create(GetAbsolutePath($"disassembly{Environment.Version.Major}.txt"));
 using var decompiler = JitDisassembler.Create();
-foreach (var m in typeof(TestStruct).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+var t = new TestStruct();
+t.Test();
+t.Test2();
+TestStruct.Add([1],1);
+foreach (var m in typeof(TestStruct).GetMethods((BindingFlags)0xffff))
 {
     if (m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1)
     {
-        Console.WriteLine(decompiler.Disassemble(m.MakeGenericMethod(typeof(int))));
+        try
+        {
+            var asm = decompiler.Disassemble(m.MakeGenericMethod(typeof(int)), opt);
+            Console.WriteLine(asm);
+            stream.WriteLine(asm);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
     else
     {
-        Console.WriteLine(decompiler.Disassemble(m));
+        var asm = decompiler.Disassemble(m, opt);
+        Console.WriteLine(asm);
+        stream.WriteLine(asm);
     }
 }
+
+return;
+
+static string GetAbsolutePath(string relativePath, [CallerFilePath] string callerFilePath = "")
+{
+    return Path.Combine(Path.GetDirectoryName(callerFilePath)!, relativePath);
+}
+
+static class StreamEx
+{
+    public static void WriteLine(this Stream stream, string buffer)
+    {
+        var bytes = Encoding.UTF8.GetBytes(buffer);
+        stream.Write(bytes);
+        stream.WriteByte((byte)'\n');
+    }
+}
+
 interface ITest
 {
     int Test()
@@ -31,18 +64,34 @@ interface ITest
     }
 }
 
-sealed class TestClass : ITest
+struct TestDisposable : IDisposable
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public int Test()
+    public void Dispose()
     {
-        return 0x12345678;
     }
+}
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+class TestClass : ITest
+{
+    int a = 1;
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     public int Test2()
     {
-        return Test();
+        return 1;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    public int Test()
+    {
+        if (a == 1)
+        {
+            a++;
+            return Test() + 1;
+        }
+
+        return Test2();
     }
 }
 
@@ -55,29 +104,24 @@ struct TestStruct() : ITest
     {
         return 1;
     }
-    
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     public int Test()
     {
-        if(a == 1)
+        if (a == 1)
         {
             a++;
-            return Test()+1;
+            return Test() + 1;
         }
-        
-        return Test2();
+
+        return Test2() + field[0];
     }
-    
-    public int Generic<T>(ref T a)
+
+    private static readonly int[] field = Enumerable.Range(0, 100).ToArray();
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void Add<T>(List<T> list, T a)
     {
-        return 0;
-    }
-    public int Generic2<T,T1>(ref T a,int[] b)
-    {
-        return 0;
-    }
-    
-    public int Ref (ref int[] a)
-    {
-        return 0;
+        list.Add(a);
     }
 }

@@ -1,10 +1,5 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using Microsoft.Diagnostics.Runtime;
-using Microsoft.Diagnostics.Runtime.AbstractDac;
-using Microsoft.Diagnostics.Runtime.Utilities;
-using FieldInfo = System.Reflection.FieldInfo;
 using MethodInfo = System.Reflection.MethodInfo;
 
 namespace JitInspect;
