@@ -2,7 +2,7 @@
 [![NuGet](https://img.shields.io/nuget/v/JitInspect.svg)](https://www.nuget.org/packages/JitInspect)
 [![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
 
-JitInspect disassembles JIT compiled managed methods to a x86/x64 ASM.
+JitInspect disassembles JIT compiled managed methods to a x86/x64/Arm64 ASM.
 Inspired by [JitBuddy](https://github.com/xoofx/JitBuddy)
 
 ## NuGet
@@ -30,7 +30,12 @@ Program.<<Main>$>g__TestMethod|0_0(System.Int32, System.Int32)
     L0000: add ecx, edx
     L0002: jmp 0x00007fff1d149690
 ```
-
+# Credits
+- [JitBuddy](https://github.com/xoofx/JitBuddy)
+- [ClrMD](https://github.com/Microsoft/clrmd)
+- [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet)
+- [iced](https://github.com/icedland/iced)
+- [Capstone.NET](Gee.External.Capstone.Arm64)
 
 
 # LICENSE

@@ -11,7 +11,7 @@
         <Version>1.0.1</Version>
         <Copyright>Copyright (c) 2024 Akeit0</Copyright>
         <Authors>Akeit0</Authors>
-        <Description>JitInspect disassembles JIT compiled managed methods to a x86/x64 ASM.</Description>
+        <Description>JitInspect disassembles JIT compiled managed methods to a x86/x64/Arm64 ASM.</Description>
     </PropertyGroup>
 
     <ItemGroup>
