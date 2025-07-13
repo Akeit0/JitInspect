@@ -15,10 +15,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Iced" Version="1.17.0" />
-        <PackageReference Include="Gee.External.Capstone" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
+        <PackageReference Include="Iced" Version="1.17.0"/>
+        <PackageReference Include="Gee.External.Capstone" Version="2.3.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
+        <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801"/>
+        <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.23"/>
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0"/>
     </ItemGroup>
     <ItemGroup>
         <None Include="..\..\README.md">

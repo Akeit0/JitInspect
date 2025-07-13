@@ -3,50 +3,56 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using JitInspect;
 
-var opt = new DisassembleOptions
-{
-    WriteMethodSignature = true,
-    WriteILToNativeMap = true,
-    MaxRecursiveDepth = 1,
-};
+TestMethod(1, 1);
+var action = TestMethod;
+Console.WriteLine(action.Method.Disassemble(maxRecursiveDepth: 1, printSource: true));
 
-using var stream = File.Create(GetAbsolutePath($"disassembly{Environment.Version.Major}.txt"));
-using var decompiler = JitDisassembler.Create();
-var t = new TestStruct();
-t.Test();
-t.Test2();
-TestStruct.Add([1],1);
-foreach (var m in typeof(TestStruct).GetMethods((BindingFlags)0xffff))
+static void TestMethod(int a, int b)
 {
-    if (m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1)
-    {
-        try
-        {
-            var asm = decompiler.Disassemble(m.MakeGenericMethod(typeof(int)), opt);
-            Console.WriteLine(asm);
-            stream.WriteLine(asm);
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
-    }
-    else
-    {
-        var asm = decompiler.Disassemble(m, opt);
-        Console.WriteLine(asm);
-        stream.WriteLine(asm);
-    }
+    for (int i = 0; i < a; i++)
+        Console.WriteLine(a + b);
 }
 
 return;
+
+// using var stream = File.Create(GetAbsolutePath($"disassembly{Environment.Version.Major}.txt"));
+// using var decompiler = JitDisassembler.Create();
+// var t = new TestStruct();
+// t.Test();
+// t.Test2();
+// TestStruct.Add([1],1);
+// foreach (var m in typeof(TestStruct).GetMethods((BindingFlags)0xffff))
+// {
+//     if (m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1)
+//     {
+//         try
+//         {
+//             m.Disassemble();
+//             var asm = decompiler.Disassemble(m.MakeGenericMethod(typeof(int)), opt);
+//             Console.WriteLine(asm);
+//             stream.WriteLine(asm);
+//         }
+//         catch (Exception)
+//         {
+//             // ignored
+//         }
+//     }
+//     else
+//     {
+//         var asm = decompiler.Disassemble(m, opt);
+//         Console.WriteLine(asm);
+//         stream.WriteLine(asm);
+//     }
+// }
+//
+// return;
 
 static string GetAbsolutePath(string relativePath, [CallerFilePath] string callerFilePath = "")
 {
     return Path.Combine(Path.GetDirectoryName(callerFilePath)!, relativePath);
 }
 
-static class StreamEx
+internal static class StreamEx
 {
     public static void WriteLine(this Stream stream, string buffer)
     {
@@ -56,7 +62,7 @@ static class StreamEx
     }
 }
 
-interface ITest
+internal interface ITest
 {
     int Test()
     {
@@ -64,7 +70,7 @@ interface ITest
     }
 }
 
-struct TestDisposable : IDisposable
+internal struct TestDisposable : IDisposable
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void Dispose()
@@ -72,7 +78,7 @@ struct TestDisposable : IDisposable
     }
 }
 
-class TestClass : ITest
+internal class TestClass : ITest
 {
     int a = 1;
 
@@ -95,7 +101,7 @@ class TestClass : ITest
     }
 }
 
-struct TestStruct() : ITest
+internal struct TestStruct() : ITest
 {
     int a = 1;
 
@@ -117,7 +123,7 @@ struct TestStruct() : ITest
         return Test2() + field[0];
     }
 
-    private static readonly int[] field = Enumerable.Range(0, 100).ToArray();
+    static readonly int[] field = Enumerable.Range(0, 100).ToArray();
 
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     public static void Add<T>(List<T> list, T a)

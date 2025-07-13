@@ -17,53 +17,44 @@ internal sealed class ArrayPoolBufferWriter<T>(ArrayPool<T> pool, int initialCap
     public ArrayPoolBufferWriter(int initialCapacity = DefaultInitialBufferSize) : this(ArrayPool<T>.Shared, initialCapacity)
     {
     }
-    
+
     public void Advance(int count)
     {
-        T[]? array = this.array;
+        var array = this.array;
 
-        if (array is null)
-        {
-            ThrowObjectDisposedException();
-        }
+        if (array is null) ThrowObjectDisposedException();
 
-        if (count < 0)
-        {
-            ThrowArgumentOutOfRangeExceptionForNegativeCount();
-        }
+        if (count < 0) ThrowArgumentOutOfRangeExceptionForNegativeCount();
 
-        if (this.index > array!.Length - count)
-        {
-            ThrowArgumentExceptionForAdvancedTooFar();
-        }
+        if (index > array!.Length - count) ThrowArgumentExceptionForAdvancedTooFar();
 
-        this.index += count;
+        index += count;
     }
 
     public Memory<T> GetMemory(int sizeHint = 0)
     {
         CheckBufferAndEnsureCapacity(sizeHint);
 
-        return this.array.AsMemory(this.index);
+        return array.AsMemory(index);
     }
 
     public Span<T> GetSpan(int sizeHint = 0)
     {
         CheckBufferAndEnsureCapacity(sizeHint);
 
-        return this.array.AsSpan(this.index);
+        return array.AsSpan(index);
     }
-    
-    public Span<T> AsSpan() => this.array.AsSpan(0, this.index);
+
+    public Span<T> AsSpan()
+    {
+        return array.AsSpan(0, index);
+    }
 
     public void Dispose()
     {
-        T[]? array = this.array;
+        var array = this.array;
 
-        if (array is null)
-        {
-            return;
-        }
+        if (array is null) return;
 
         this.array = null;
 
@@ -73,48 +64,33 @@ internal sealed class ArrayPoolBufferWriter<T>(ArrayPool<T> pool, int initialCap
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     void CheckBufferAndEnsureCapacity(int sizeHint)
     {
-        T[]? array = this.array;
+        var array = this.array;
 
-        if (array is null)
-        {
-            ThrowObjectDisposedException();
-        }
+        if (array is null) ThrowObjectDisposedException();
 
-        if (sizeHint < 0)
-        {
-            ThrowArgumentOutOfRangeExceptionForNegativeSizeHint();
-        }
+        if (sizeHint < 0) ThrowArgumentOutOfRangeExceptionForNegativeSizeHint();
 
-        if (sizeHint == 0)
-        {
-            sizeHint = 1;
-        }
+        if (sizeHint == 0) sizeHint = 1;
 
-        if (sizeHint > array!.Length - this.index)
-        {
-            ResizeBuffer(sizeHint);
-        }
+        if (sizeHint > array!.Length - index) ResizeBuffer(sizeHint);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     void ResizeBuffer(int sizeHint)
     {
-        uint minimumSize = (uint)this.index + (uint)sizeHint;
+        var minimumSize = (uint)index + (uint)sizeHint;
         if (minimumSize > 1024 * 1024)
         {
             var newMinimumSize = 1024u * 1024u;
-            while (newMinimumSize < minimumSize)
-            {
-                newMinimumSize <<= 1;
-            }
+            while (newMinimumSize < minimumSize) newMinimumSize <<= 1;
 
             minimumSize = newMinimumSize;
         }
 
         var newBuffer = pool.Rent((int)minimumSize);
-        Array.Copy(this.array!, newBuffer, this.index);
-        pool.Return(this.array!);
-        this.array = newBuffer;
+        Array.Copy(array!, newBuffer, index);
+        pool.Return(array!);
+        array = newBuffer;
     }
 
     static void ThrowArgumentOutOfRangeExceptionForNegativeCount()

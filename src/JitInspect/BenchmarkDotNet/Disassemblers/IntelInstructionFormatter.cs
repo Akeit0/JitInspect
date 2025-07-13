@@ -20,34 +20,31 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+
 using Iced.Intel;
 
-namespace BenchmarkDotNet.Disassemblers
+namespace BenchmarkDotNet.Disassemblers;
+
+internal static class IntelInstructionFormatter
 {
-    internal static class IntelInstructionFormatter
+    internal static string Format(Instruction instruction, Formatter formatter, bool printInstructionAddresses, uint pointerSize)
     {
-        internal static string Format(Instruction instruction, Formatter formatter, bool printInstructionAddresses, uint pointerSize)
-        {
-            var output = new StringOutput();
+        var output = new StringOutput();
 
-            if (printInstructionAddresses)
-            {
-                FormatInstructionPointer(instruction, formatter, pointerSize, output);
-            }
+        if (printInstructionAddresses) FormatInstructionPointer(instruction, formatter, pointerSize, output);
 
-            formatter.Format(instruction, output);
+        formatter.Format(instruction, output);
 
-            return output.ToString();
-        }
+        return output.ToString();
+    }
 
-        private static void FormatInstructionPointer(Instruction instruction, Formatter formatter, uint pointerSize, StringOutput output)
-        {
-            string ipFormat = formatter.Options.LeadingZeroes
-                ? pointerSize == 4 ? "X8" : "X16"
-                : "X";
+    static void FormatInstructionPointer(Instruction instruction, Formatter formatter, uint pointerSize, StringOutput output)
+    {
+        var ipFormat = formatter.Options.LeadingZeroes
+            ? pointerSize == 4 ? "X8" : "X16"
+            : "X";
 
-            output.Write(instruction.IP.ToString(ipFormat), FormatterTextKind.Text);
-            output.Write(" ", FormatterTextKind.Text);
-        }
+        output.Write(instruction.IP.ToString(ipFormat), FormatterTextKind.Text);
+        output.Write(" ", FormatterTextKind.Text);
     }
 }

@@ -2,9 +2,8 @@
 
 public class DisassembleOptions
 {
-    public bool WriteMethodSignature { get; set; } = true;
-    public bool WriteILToNativeMap { get; set; } = false;
-    
     public DisassemblySyntax Syntax { get; set; } = DisassemblySyntax.Masm;
     public int MaxRecursiveDepth { get; set; } = 0;
+    public bool PrintInstructionAddresses { get; set; } = false;
+    public bool PrintSource { get; set; } = false;
 }

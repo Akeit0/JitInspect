@@ -3,6 +3,7 @@
 namespace JitInspect;
 
 internal class AsmSymbolResolver(
+    HashSet<ulong> symbols,
     ulong currentMethodAddress,
     uint currentMethodLength)
     : ISymbolResolver
@@ -12,7 +13,8 @@ internal class AsmSymbolResolver(
         if (address >= currentMethodAddress && address < currentMethodAddress + currentMethodLength)
         {
             // relative offset reference
-            symbol = new SymbolResult(address, "L" + (address - currentMethodAddress).ToString("x4"));
+            symbol = new(address, "L" + (address - currentMethodAddress).ToString("x4"));
+            symbols.Add(address - currentMethodAddress);
             return true;
         }
 
