@@ -10,6 +10,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\JitInspect\JitInspect.csproj" />
+        <ProjectReference Include="..\..\src\JitInspect\JitInspect.csproj"/>
     </ItemGroup>
 </Project>

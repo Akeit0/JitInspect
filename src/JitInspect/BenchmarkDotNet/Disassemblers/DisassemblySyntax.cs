@@ -20,21 +20,23 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-namespace BenchmarkDotNet.Diagnosers
+
+namespace BenchmarkDotNet.Diagnosers;
+
+public enum DisassemblySyntax
 {
-    public enum DisassemblySyntax
-    {
-        /// <summary>
-        /// Indicates a disassembler should use MASM syntax for generated assembly code
-        /// </summary>
-        Masm,
-        /// <summary>
-        /// Indicates a disassembler should use Intel syntax for generated assembly code.
-        /// </summary>
-        Intel,
-        /// <summary>
-        /// Indicates a disassembler should use AT&amp;T syntax for generated assembly code.
-        /// </summary>
-        Att
-    }
+    /// <summary>
+    /// Indicates a disassembler should use MASM syntax for generated assembly code
+    /// </summary>
+    Masm,
+
+    /// <summary>
+    /// Indicates a disassembler should use Intel syntax for generated assembly code.
+    /// </summary>
+    Intel,
+
+    /// <summary>
+    /// Indicates a disassembler should use AT&amp;T syntax for generated assembly code.
+    /// </summary>
+    Att
 }
